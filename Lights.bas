@@ -1,4 +1,6 @@
 ' Outdoor light controller
+' B.0 and C.5 are used for comms
+' Use Cx pins for input, Bx for output
 
 Symbol LDT = C.0		' Light dependent transistor input	
 Symbol MOVE1 = pinC.1	' Movement sensor input 1
@@ -9,10 +11,13 @@ Symbol LIGHT2 = B.3	' Light bank 2
 Symbol STATUS = B.4	' Status LED
 
 Symbol LIGHT = W0			' Ambient light reading
-Symbol LIGHT_TIMER = W1		' Light1 timer
-Symbol LIGHT_TIMEOUT = 115	' 300s / 2.6s = about 5 minutes of light
-Symbol LIGHT_THRESH = 100	' Daylight threshold
-Symbol SLEEP_TIME = 2		' 4.6 seconds
+Symbol LIGHT_TIMER1 = W1	' Light1 timer
+Symbol LIGHT_TIMEOUT1 = 115	' 300s / 2.6s = about 5 minutes of light
+Symbol LIGHT_TIMER2 = W2	' Light2 timer
+Symbol LIGHT_TIMEOUT2 = 23	' About 1 minutes after last movement
+Symbol LIGHT_THRESH = 20	' Daylight threshold
+Symbol SLEEP_DAY_TIME = 4	' 10.4 seconds
+Symbol SLEEP_NIGHT_TIME = 1	' 2.6 seconds
 Symbol STATUS_FLASH = 50	' Status LED flash
 
 StartLoop:
@@ -27,25 +32,39 @@ ReadADC10	LDT, LIGHT
 if LIGHT > LIGHT_THRESH then
 	' Daylight, sleep
 	low	SENSPWR	
-	sleep	SLEEP_TIME	
-	LIGHT_TIMER = 0 
+	low	LIGHT1
+	low	LIGHT2
+	LIGHT_TIMER1 = 0 
+	LIGHT_TIMER2 = 0 	
+	sleep	SLEEP_DAY_TIME	
 else
 	high	SENSPWR
-	' Night, check for movement
-	if MOVE1 = 1 or MOVE2 = 1 then
+	' Night, check for movement on sensor 1
+	if MOVE1 = 1 then
 		' Movement, switch ON and set timeout
 		high	LIGHT1
-		high 	LIGHT2
-		LIGHT_TIMER = LIGHT_TIMEOUT
+		LIGHT_TIMER1 = LIGHT_TIMEOUT1
 	else
-		if LIGHT_TIMER = 0 then
-			low	LIGHT1
-			low	LIGHT2
+		if LIGHT_TIMER1 = 0 then
+			low	LIGHT1			
 		else
-			LIGHT_TIMER = LIGHT_TIMER - 1	
+			LIGHT_TIMER1 = LIGHT_TIMER1 - 1	
 		endif		
 	endif	
-	sleep	SLEEP_TIME	
+	' Night, check for movement on sensor 2
+	if MOVE2 = 1 then
+		' Movement, switch ON and set timeout
+		high	LIGHT2
+		LIGHT_TIMER2 = LIGHT_TIMEOUT2
+	else
+		if LIGHT_TIMER2 = 0 then
+			low	LIGHT2
+		else
+			LIGHT_TIMER2 = LIGHT_TIMER2 - 1	
+		endif		
+	endif	
+
+	sleep	SLEEP_NIGHT_TIME	
 endif
 
 goto StartLoop
