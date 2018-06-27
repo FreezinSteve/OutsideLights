@@ -12,13 +12,13 @@ Symbol STATUS = B.4	' Status LED
 
 Symbol LIGHT = W0			' Ambient light reading
 Symbol LIGHT_TIMER1 = W1	' Light1 timer
-Symbol LIGHT_TIMEOUT1 = 115	' 300s / 2.6s = about 5 minutes of light
+Symbol LIGHT_TIMEOUT1 = 115	' 300s / 2.6s = about 5 minutes of light after last movement
 Symbol LIGHT_TIMER2 = W2	' Light2 timer
-Symbol LIGHT_TIMEOUT2 = 23	' About 1 minutes after last movement
+Symbol LIGHT_TIMEOUT2 = 23	' About 1 minute after last movement
 Symbol LIGHT_THRESH = 20	' Daylight threshold
-Symbol SLEEP_DAY_TIME = 4	' 10.4 seconds
-Symbol SLEEP_NIGHT_TIME = 1	' 2.6 seconds
-Symbol STATUS_FLASH = 50	' Status LED flash
+Symbol SLEEP_DAY_TIME = 4	' 10.4 seconds scan rate 
+Symbol SLEEP_NIGHT_TIME = 1	' 2.6 seconds scan rate
+Symbol STATUS_FLASH = 50	' Status LED flash time
 
 StartLoop:
 
@@ -40,7 +40,7 @@ if LIGHT > LIGHT_THRESH then
 else
 	high	SENSPWR
 	' Night, check for movement on sensor 1
-	if MOVE1 = 1 then
+	if MOVE1 = 0 then  ' LO = MOVEMENT
 		' Movement, switch ON and set timeout
 		high	LIGHT1
 		LIGHT_TIMER1 = LIGHT_TIMEOUT1
@@ -52,7 +52,7 @@ else
 		endif		
 	endif	
 	' Night, check for movement on sensor 2
-	if MOVE2 = 1 then
+	if MOVE2 = 0 then  ' LO = MOVEMENT
 		' Movement, switch ON and set timeout
 		high	LIGHT2
 		LIGHT_TIMER2 = LIGHT_TIMEOUT2
